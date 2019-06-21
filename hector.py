@@ -25,9 +25,11 @@ class Hector(discord.Client):
                 await self.close()
 
         if message.content == "!member_count":
-            server = message.guild
-            await message.channel.send(server.name + " has " +
-                                       str(len(server.members)) + " members")
+            try:
+                server = message.guild
+                await message.channel.send(server.name + " has " + str(len(server.members)) + " members")
+            except AttributeError:
+                await message.channel.send("This is not a server you fool!")
 
         # Lets the user specify a message and dm's that message to them after
         # a specified amount of time
