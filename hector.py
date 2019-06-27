@@ -21,28 +21,28 @@ class Hector(discord.Client):
             await message.channel.send("Hi!")
 
         if message.content == "!get_out":
-            self.get_out(message)
+            await self.get_out(message)
 
         if message.content == "!member_count":
-            self.member_count(message)
+            await self.member_count(message)
 
         if message.content.startswith("!remind_me ", 0, 11):
-            self.remind_me(message)
+            await self.remind_me(message)
 
         if message.content == "!birthday":
-            self.birthday(message)
+            await self.birthday(message)
 
         if message.content == "!commands":
-            self.commands(message)
+            await self.commands(message)
 
     # Shuts down the bot if the command was made by me (and only me).
-    def get_out(self, message):
+    async def get_out(self, message):
         if message.author.id == ***REMOVED***:
             await self.close()
 
     # Sends a message containing the amount of members in a server, if the command request was made in a server.
     @staticmethod
-    def member_count(message):
+    async def member_count(message):
         try:
             server = message.guild
             await message.channel.send(server.name + " has " + str(len(server.members)) + " members")
@@ -52,7 +52,7 @@ class Hector(discord.Client):
     # Lets the user specify a message and dm's that message to them after
     # a specified amount of time.
     @staticmethod
-    def remind_me(message):
+    async def remind_me(message):
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -77,20 +77,23 @@ class Hector(discord.Client):
 
     # Sends a happy birthday message if it's someone in the servers birthday.
     @staticmethod
-    def birthday(message):
+    async def birthday(message):
         with open("birthdays.csv", "r+") as fileobject:
             birthdays = csv.reader(fileobject)
 
+            birthday = False
             for birthday in birthdays:
                 if birthday[0] == str(date.today().day) \
                         and birthday[1] == str(date.today().month):
                     await message.channel.send("Happy birthday " + birthday[2].title() + "!")
+                    birthday = True
 
-        await message.channel.send("There is nothing to be happy about today")
+            if not birthday:
+                await message.channel.send("There is nothing to be happy about today")
 
     # Sends a list of the currently available commands for Hector
     @staticmethod
-    def commands(message):
+    async def commands(message):
         await message.channel.send("The currently available commands are:\n"
                                    "!hello\n"
                                    "!member_count\n"
