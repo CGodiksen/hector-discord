@@ -15,10 +15,10 @@ Returns the amount of members in the server the message was sent from.
 Sends a private message to the person who sent the command, containing the specified message. The message is sent after a specified
 amount of time has passed (Max 24 hours in the future).
 
-<b>!birthday</b>  
-Sends a birthday greeting if it's someones birthday.
+<b>!add_birthday <em>name date</em></b>  
+Adds a new birthday to the list of birthdays being kept in the system. An automatic birthday greeting will be sent from the system at 8.15 on the specified day in the text channel where the <b>!add_birthday</b> entry was made.
 
-<b>!new_event <em>message date</em></b>  
+<b>!add_event <em>message date</em></b>  
 Adds an event to the system that contains the specified message. At 8.15 on the specified date the system will resend the message in the chat where the event was created, thereby working as an alert system. This can also be seen as the long term version of 
 <b>!remind_me</b>.
 
