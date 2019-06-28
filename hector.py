@@ -14,8 +14,8 @@ class Hector(discord.Client):
     def __init__(self, **options):
         super().__init__(**options)
 
-        # create the background task and run it in the background
-        self.bg_task = self.loop.create_task(self.my_background_task())
+        # Create the background task and run it in the background
+        self.bg_task = self.loop.create_task(self.background_task())
 
     async def on_ready(self):
         print('Logged in as')
@@ -23,7 +23,8 @@ class Hector(discord.Client):
         print(self.user.id)
         print('------')
 
-    async def my_background_task(self):
+    # A task that is run on a loop in it's own thread, it does something every 60 seconds.
+    async def background_task(self):
         await self.wait_until_ready()
         while not self.is_closed():
             if datetime.datetime.now().hour == 8 and datetime.datetime.now().minute == 15:
@@ -144,25 +145,40 @@ class Hector(discord.Client):
             await message.channel.send("This is not a supported date format")
             return
 
+        # Ensuring that the entered date is in the future and not today or in the past.
+        if dateutil.parser.parse(message_list[-1]) <= datetime.datetime.now():
+            await message.channel.send("That is in the past, let's think about the future instead.")
+            return
+
         # Appending the file that contains the currently active events
         with open("events.csv", "a", newline="") as fileobject:
             event_writer = csv.writer(fileobject)
 
             event_writer.writerow([message.channel.id, event_message, event_date])
+            await message.channel.send("I will remember that for you.")
 
     # Looking through the list of events and sending the events that are happening today
     @staticmethod
     async def check_events():
         # Trying to open the file for reading, if it doesnt exist it throws an OSError.
         try:
-            with open("events.csv", "r") as fileobject:
-                event_reader = csv.reader(fileobject)
+            with open("events.csv", "r") as file:
+                active_events = []
 
-                # Goes through all the rows and checks if it scheduled for today
-                for row in event_reader:
+                # Goes through all the rows and checks if it scheduled for today, if so it sends the specified message
+                # if not it adds it to the list of still active events.
+                for row in csv.reader(file):
                     if dateutil.parser.parse(row[2]).date() == date.today():
                         await client.get_channel(int(row[0])).send(" ".join(row[1]))
+                    else:
+                        active_events.append(row)
 
+            # Overwriting the file so it only contains the currently active events
+            with open("events.csv", "w", newline="") as file:
+                event_writer = csv.writer(file)
+
+                for row in active_events:
+                    event_writer.writerow(row)
         except OSError:
             return
 
