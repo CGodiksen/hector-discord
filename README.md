@@ -18,6 +18,10 @@ amount of time has passed (Max 24 hours in the future).
 <b>!birthday</b>  
 Sends a birthday greeting if it's someones birthday.
 
+<b>!new_event <em>message date</em></b>  
+Adds an event to the system that contains the specified message. At 8.15 on the specified date the system will resend the message in the chat where the event was created, thereby working as an alert system. This can also be seen as the long term version of 
+<b>!remind_me</b>.
+
 ## Current use
 
 
