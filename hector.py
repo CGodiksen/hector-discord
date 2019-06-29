@@ -62,8 +62,8 @@ class Hector(discord.Client):
             if message.content.startswith("!add_birthday ", 0, 14):
                 await self.add_birthday(message)
 
-            if message.content.startswith("!new_event ", 0, 11):
-                await self.new_event(message)
+            if message.content.startswith("!add_event ", 0, 11):
+                await self.add_event(message)
 
     # Shuts down the bot if the command was made by me (and only me).
     async def get_out(self, message):
@@ -82,6 +82,7 @@ class Hector(discord.Client):
     # a specified amount of time.
     @staticmethod
     async def remind_me(message):
+        # TODO: Make !remind_me persistent using a csv file
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -91,7 +92,8 @@ class Hector(discord.Client):
         try:
             time_to_wait = int(message_list[-1])
             if time_to_wait <= 1440:
-                await message.channel.send("I will remind you of that")
+                # React with the thumbs up emoji. \N{THUMBS UP SIGN} is the unicode name for the emoji.
+                await message.add_reaction("\N{THUMBS UP SIGN}")
                 await asyncio.sleep(time_to_wait * 60)
 
                 if dm_message == "":
@@ -124,7 +126,7 @@ class Hector(discord.Client):
         with open("birthdays.csv", "a", newline="") as file:
             birthday_writer = csv.writer(file)
             birthday_writer.writerow([message.channel.id, birthday_name, birthday_date])
-            await message.channel.send("I will remember that for you.")
+            await message.add_reaction("\N{THUMBS UP SIGN}")
 
     # Sends a happy birthday message if it's someone in the servers birthday.
     @staticmethod
@@ -148,7 +150,8 @@ class Hector(discord.Client):
 
     # Creating a new event that will be added to the list of events for the specific server
     @staticmethod
-    async def new_event(message):
+    async def add_event(message):
+        # TODO: Make it possible to add events to private chats
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -156,6 +159,7 @@ class Hector(discord.Client):
         event_date = message_list[-1]
 
         # Checking if the given date can be parsed into a datetime.datetime object
+        # TODO: This should maybe be put into a function and called the two places it is done
         try:
             dateutil.parser.parse(message_list[-1])
         except ValueError:
@@ -172,7 +176,7 @@ class Hector(discord.Client):
             event_writer = csv.writer(file)
 
             event_writer.writerow([message.channel.id, event_message, event_date])
-            await message.channel.send("I will remember that for you.")
+            await message.add_reaction("\N{THUMBS UP SIGN}")
 
     # Looking through the list of events and sending the events that are happening today
     @staticmethod
@@ -198,6 +202,8 @@ class Hector(discord.Client):
                     event_writer.writerow(row)
         except OSError:
             return
+
+    # TODO: Make an analyse() function that can give information regarding a specific user
 
 
 client = Hector()
