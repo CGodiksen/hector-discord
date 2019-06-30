@@ -22,6 +22,9 @@ Adds a new birthday to the list of birthdays being kept in the system. An automa
 Adds an event to the system that contains the specified message. At 8.15 on the specified date the system will resend the message in the chat where the event was created, thereby working as an alert system. This can also be seen as the long term version of 
 <b>!remind_me</b>.
 
+<b>!commands</b>  
+Displays a list of the currently available commands for Hector. 
+
 ## Current use
 
 
