@@ -54,6 +54,9 @@ class Hector(discord.Client):
         if message.content == "!commands":
             await self.commands(message)
 
+        if message.content.startswith("!add_event ", 0, 11):
+            await self.add_event(message)
+
         # Ensuring that these commands can only be called in a server text channel.
         if type(message.channel) is discord.TextChannel:
             if message.content == "!member_count":
@@ -61,9 +64,6 @@ class Hector(discord.Client):
 
             if message.content.startswith("!add_birthday ", 0, 14):
                 await self.add_birthday(message)
-
-            if message.content.startswith("!add_event ", 0, 11):
-                await self.add_event(message)
 
     # Shuts down the bot if the command was made by me (and only me).
     async def get_out(self, message):
@@ -82,7 +82,6 @@ class Hector(discord.Client):
     # a specified amount of time.
     @staticmethod
     async def remind_me(message):
-        # TODO: Make !remind_me persistent using a csv file
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -146,7 +145,8 @@ class Hector(discord.Client):
                                    "!hello\n"
                                    "!member_count\n"
                                    "!remind_me ***message*** ***time***\n"
-                                   "!birthday")
+                                   "!add_event ***message*** ***date***\n"
+                                   "!add_birthday ***name*** ***date***")
 
     # Creating a new event that will be added to the list of events for the specific server
     @staticmethod
@@ -158,8 +158,7 @@ class Hector(discord.Client):
         event_message = " ".join(message_list[1:-1])
         event_date = message_list[-1]
 
-        # Checking if the given date can be parsed into a datetime.datetime object
-        # TODO: This should maybe be put into a function and called the two places it is done
+        # Checking if the given date can be parsed into a datetime.datetime object.
         try:
             dateutil.parser.parse(message_list[-1])
         except ValueError:
@@ -171,11 +170,18 @@ class Hector(discord.Client):
             await message.channel.send("That is in the past, let's think about the future instead.")
             return
 
+        # If it's a private chat we need to use the author id so we can send a private message.
+        # The problem with saving the dm_channel id is that dm channels are not kept in the cache for long.
+        if type(message.channel) is discord.TextChannel:
+            message_id = message.channel.id
+        else:
+            message_id = message.author.id
+
         # Appending the file that contains the currently active events
         with open("events.csv", "a", newline="") as file:
             event_writer = csv.writer(file)
 
-            event_writer.writerow([message.channel.id, event_message, event_date])
+            event_writer.writerow([message_id, event_message, event_date])
             await message.add_reaction("\N{THUMBS UP SIGN}")
 
     # Looking through the list of events and sending the events that are happening today
@@ -190,7 +196,11 @@ class Hector(discord.Client):
                 # if not it adds it to the list of still active events.
                 for row in csv.reader(file):
                     if dateutil.parser.parse(row[2]).date() == date.today():
-                        await client.get_channel(int(row[0])).send(row[1])
+                        # The id (row[0]) can either be a server channel id or a message author id from a dm channel.
+                        if type(client.get_channel(int(row[0]))) is discord.TextChannel:
+                            await client.get_channel(int(row[0])).send(row[1])
+                        else:
+                            await client.get_user(int(row[0])).send(row[1])
                     else:
                         active_events.append(row)
 
