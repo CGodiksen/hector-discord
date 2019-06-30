@@ -151,7 +151,6 @@ class Hector(discord.Client):
     # Creating a new event that will be added to the list of events for the specific server
     @staticmethod
     async def add_event(message):
-        # TODO: Make it possible to add events to private chats
         message_list = message.content.split()
 
         # Splitting the message into the different parts
