@@ -1,7 +1,13 @@
-# Token: ***REMOVED***
-# Permissions: 8
-# Client ID: ***REMOVED***
-# OAUTH2 URL: ***REMOVED***
+"""A simple discord bot named Hector.
+
+The discord bot is implemented using a class based design and the "discord.Client" superclass from the
+"discord" python package.
+
+Token: ***REMOVED***
+Permissions: 8
+Client ID: ***REMOVED***
+OAUTH2 URL: ***REMOVED***
+"""
 import discord
 import asyncio
 import csv
@@ -11,20 +17,27 @@ import datetime
 
 
 class Hector(discord.Client):
+    """
+    Class representing a discord bot object. The function "on_message" from the super class
+    "discord.Clint" is overwritten to implement the functionality of the available commands.
+    """
+
     def __init__(self, **options):
+        """Initializing the necessary elements from the super class and starting the looping background task."""
         super().__init__(**options)
 
         # Create the background task and run it in the background
         self.bg_task = self.loop.create_task(self.background_task())
 
     async def on_ready(self):
+        """Displaying information about the bot when it is ready to run."""
         print('Logged in as')
         print(self.user.name)
         print(self.user.id)
         print('------')
 
-    # A task that is run on a loop in it's own thread, it does something every 60 seconds.
     async def background_task(self):
+        """Background task that loops and makes a check every 60 second for a specific condition."""
         await self.wait_until_ready()
         while not self.is_closed():
             # Calls the check_events and check_birthday functions if the time is exactly 8.15 in the morning.
@@ -35,6 +48,10 @@ class Hector(discord.Client):
             await asyncio.sleep(60)
 
     async def on_message(self, message):
+        """
+        This method is called every time a message is sent and if the message contains
+        a command then that command is executed via another class method.
+        """
         # Obtaining some necessary information about the message
         server = message.guild
 
@@ -43,7 +60,7 @@ class Hector(discord.Client):
             return
 
         if message.content == "!hello":
-            await message.channel.send("Hi!")
+            await self.hello(message)
 
         if message.content == "!get_out":
             await self.get_out(message)
@@ -65,23 +82,24 @@ class Hector(discord.Client):
             if message.content.startswith("!add_birthday ", 0, 14):
                 await self.add_birthday(message)
 
-    # Shuts down the bot if the command was made by me (and only me).
     async def get_out(self, message):
+        """Shuts down the bot if the command was made by me (and only me)."""
         if message.author.id == ***REMOVED***:
             await self.close()
 
-    # Sends a message containing the amount of members in a server, if the command request was made in a server.
+    @staticmethod
+    async def hello(message):
+        """Sends a message saying "Hi!"."""
+        await message.channel.send("Hi!")
+
     @staticmethod
     async def member_count(message, server):
-        try:
-            await message.channel.send(server.name + " has " + str(len(server.members)) + " members")
-        except AttributeError:
-            await message.channel.send("This is not a server you fool!")
+        """Sends a message displaying the amount of members in a server."""
+        await message.channel.send(server.name + " has " + str(len(server.members)) + " members")
 
-    # Lets the user specify a message and dm's that message to them after
-    # a specified amount of time.
     @staticmethod
     async def remind_me(message):
+        """Lets the user specify a message and dm's that message to them after a specified amount of time."""
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -105,9 +123,9 @@ class Hector(discord.Client):
         except ValueError:
             await message.channel.send("You need to specify a time")
 
-    # Adds a new birthday to the list of birthdays
     @staticmethod
     async def add_birthday(message):
+        """Adds a new birthday to the list of birthdays for the given server."""
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -127,9 +145,12 @@ class Hector(discord.Client):
             birthday_writer.writerow([message.channel.id, birthday_name, birthday_date])
             await message.add_reaction("\N{THUMBS UP SIGN}")
 
-    # Sends a happy birthday message if it's someone in the servers birthday.
     @staticmethod
     async def check_birthday():
+        """
+        Sends a happy birthday message if it's someones birthday.
+        The message is sent in the same channel the birthday was added in.
+        """
         with open("birthdays.csv", "r") as file:
             birthdays = csv.reader(file)
             # Checking if it's a persons birthday by checking if the day and month are the same (ignoring year)
@@ -138,9 +159,9 @@ class Hector(discord.Client):
                         and dateutil.parser.parse(row[2]).date().month == date.today().month:
                     await client.get_channel(int(row[0])).send("Happy birthday " + row[1].title() + "!")
 
-    # Sends a list of the currently available commands for Hector
     @staticmethod
     async def commands(message):
+        """Sends a list of the currently available commands for Hector."""
         await message.channel.send("The currently available commands are:\n"
                                    "!hello\n"
                                    "!member_count\n"
@@ -148,9 +169,9 @@ class Hector(discord.Client):
                                    "!add_event ***message*** ***date***\n"
                                    "!add_birthday ***name*** ***date***")
 
-    # Creating a new event that will be added to the list of events for the specific server
     @staticmethod
     async def add_event(message):
+        """Adds a new event to the list of active events for the specific server."""
         message_list = message.content.split()
 
         # Splitting the message into the different parts
@@ -183,9 +204,12 @@ class Hector(discord.Client):
             event_writer.writerow([message_id, event_message, event_date])
             await message.add_reaction("\N{THUMBS UP SIGN}")
 
-    # Looking through the list of events and sending the events that are happening today
     @staticmethod
     async def check_events():
+        """
+        Looks through the list of events and sends the events that are scheduled for today.
+        If an event is sent then it is deleted from the file containing the currently active events.
+        """
         # Trying to open the file for reading, if it doesnt exist it throws an OSError.
         try:
             with open("events.csv", "r") as file:
