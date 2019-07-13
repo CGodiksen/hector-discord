@@ -2,6 +2,19 @@
 Hector is a very simple discord bot meant as a learning project for the creator. This is not a discord bot that tries to
 innovate in any shape or form.
 
+## Installation
+If you want to download and use Hector for yourself then some setup is required.  
+
+First, you need to install all the required python packages that are used in the project, this can be done by navigating to where you normally install python packages and using the command ```$ pip install requirements.txt```. This will pull the required packages from the included requirements.txt file and install them.
+
+Secondly, you need to set up a ```config.json``` file in the main project directory. This file is needed to store your bots token and your own personal ID from discord. The token is used to run the bot and your ID is used to make it so only you can run the privileged command <b>!get_out</b>, that shuts down the bot. Just create a new file called ```config.json``` and make it contain the following:
+```
+{
+  "token": YourTokenStringHere
+  "owner id": YourIDIntHere
+}
+```
+When you have completed these two steps then Hector should be fully functional. 
 ## Usage
 The currently available commands for Hector are:  
 
