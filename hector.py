@@ -2,11 +2,6 @@
 
 The discord bot is implemented using a class based design and the "discord.Client" superclass from the
 "discord" python package.
-
-Token: ***REMOVED***
-Permissions: 8
-Client ID: ***REMOVED***
-OAUTH2 URL: ***REMOVED***
 """
 import discord
 import asyncio
@@ -14,6 +9,7 @@ import csv
 import dateutil.parser
 from datetime import date
 import datetime
+import json
 
 
 class Hector(discord.Client):
@@ -83,9 +79,11 @@ class Hector(discord.Client):
                 await self.add_birthday(message)
 
     async def get_out(self, message):
-        """Shuts down the bot if the command was made by me (and only me)."""
-        if message.author.id == ***REMOVED***:
-            await self.close()
+        """Shuts down the bot if the command was made by the owner of the bot."""
+        # Pulling the owner ID from the config file and using it to check if the message is sent by the owner.
+        with open("config.json", "r") as config_file:
+            if message.author.id == json.load(config_file)["owner id"]:
+                await self.close()
 
     @staticmethod
     async def hello(message):
@@ -240,4 +238,7 @@ class Hector(discord.Client):
 
 
 client = Hector()
-client.run("***REMOVED***")
+
+# Pulling the token from the config file and using it to run the bot.
+with open("config.json", "r") as config:
+    client.run(json.load(config)["token"])
