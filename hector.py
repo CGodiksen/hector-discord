@@ -10,6 +10,8 @@ import dateutil.parser
 from datetime import date
 import datetime
 import json
+from bs4 import BeautifulSoup
+import requests
 
 
 class Hector(discord.Client):
@@ -69,6 +71,9 @@ class Hector(discord.Client):
 
         if message.content.startswith("!add_event ", 0, 11):
             await self.add_event(message)
+
+        if message.content.startswith("!lookup ", 0, 8):
+            await self.lookup(message)
 
         # Ensuring that these commands can only be called in a server text channel.
         if type(message.channel) is discord.TextChannel:
@@ -165,7 +170,8 @@ class Hector(discord.Client):
                                    "!member_count\n"
                                    "!remind_me ***message*** ***time***\n"
                                    "!add_event ***message*** ***date***\n"
-                                   "!add_birthday ***name*** ***date***")
+                                   "!add_birthday ***name*** ***date***\n"
+                                   "!lookup ***term***")
 
     @staticmethod
     async def add_event(message):
@@ -234,7 +240,36 @@ class Hector(discord.Client):
         except OSError:
             return
 
+    @staticmethod
+    async def lookup(message):
+        """Looks up a word in the MI book index and sends the section link that contains information about it."""
+        # The url containing the index for the book "Artificial intelligence: Foundations of computational agents".
+        url = "https://artint.info/2e/html/ArtInt2e.idx.html"
+        index_site = requests.get(url)
+
+        # Creating a html lxml parser with beautifulsoup4, this is used for pulling data out of the websites html.
+        index_parser = BeautifulSoup(index_site.text, "lxml")
+
+        # Creating an id that corresponds to the requested look up term, this id will be used to find the correct link.
+        lookup_id = message.content[8:].replace(" ", "")
+
+        # Finding the section href link that contains the target word using the lookup id.
+        section_link = index_parser.find("li", id=lookup_id).find("a", {"class": "ltx_ref"}).get("href")
+
+        # The section_link needs to be appended to the rest of the url to create a visitable url.
+        section_link = "https://artint.info/2e/html/" + section_link
+
+        # Sending the link that corresponds to the target word.
+        await message.channel.send("You can find information on \"" + message.content[8:] + "\" at: \n" + section_link)
+
+        # TODO: Send a message containing the specific paragraph that contains the information needed.
+        # Grabbing the html from the section site and creating a bs4 parser for it, the same as above for the index.
+        # section_site = requests.get(section_link)
+        # section_parser = BeautifulSoup(section_site.text, "lxml")
+
     # TODO: Make an analyse() function that can give information regarding a specific user
+
+    # TODO: Make a translate function that can translate a non-english and non-danish message into english
 
 
 client = Hector()
