@@ -242,7 +242,9 @@ class Hector(discord.Client):
 
     @staticmethod
     async def lookup(message):
-        """Looks up a word in the MI book index and sends the section link that contains information about it."""
+        """Looks up a term in the MI book index and sends the section link that contains information about it."""
+        term = message.content[8:]
+
         # The url containing the index for the book "Artificial intelligence: Foundations of computational agents".
         url = "https://artint.info/2e/html/ArtInt2e.idx.html"
         index_site = requests.get(url)
@@ -251,16 +253,21 @@ class Hector(discord.Client):
         index_parser = BeautifulSoup(index_site.text, "lxml")
 
         # Creating an id that corresponds to the requested look up term, this id will be used to find the correct link.
-        lookup_id = message.content[8:].replace(" ", "")
+        lookup_id = term.replace(" ", "")
 
-        # Finding the section href link that contains the target word using the lookup id.
-        section_link = index_parser.find("li", id=lookup_id).find("a", {"class": "ltx_ref"}).get("href")
+        # If the given term does not exist, we want to catch the exception and give a relevant error message.
+        try:
+            # Finding the section href link that contains the target word using the lookup id.
+            section_link = index_parser.find("li", id=lookup_id).find("a", {"class": "ltx_ref"}).get("href")
+        except AttributeError:
+            await message.channel.send("I can't find any sections that contain information about \"" + term + "\"")
+            return
 
         # The section_link needs to be appended to the rest of the url to create a visitable url.
         section_link = "https://artint.info/2e/html/" + section_link
 
         # Sending the link that corresponds to the target word.
-        await message.channel.send("You can find information on \"" + message.content[8:] + "\" at: \n" + section_link)
+        await message.channel.send("You can find information on \"" + term + "\" at: \n" + section_link)
 
         # TODO: Send a message containing the specific paragraph that contains the information needed.
         # Grabbing the html from the section site and creating a bs4 parser for it, the same as above for the index.
