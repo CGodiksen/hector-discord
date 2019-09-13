@@ -12,6 +12,9 @@ import datetime
 import json
 from bs4 import BeautifulSoup
 import requests
+from google.cloud import translate
+import os
+import html
 
 
 class Hector(discord.Client):
@@ -50,6 +53,12 @@ class Hector(discord.Client):
         This method is called every time a message is sent and if the message contains
         a command then that command is executed via another class method.
         """
+
+        # Creating a translation client for the google translate API
+        translate_client = translate.Client()
+
+        await self.detect_and_translate(message, translate_client)
+
         # Obtaining some necessary information about the message
         server = message.guild
 
@@ -274,6 +283,24 @@ class Hector(discord.Client):
         # section_site = requests.get(section_link)
         # section_parser = BeautifulSoup(section_site.text, "lxml")
 
+    async def detect_and_translate(self, message, translate_client):
+        """Detecting the language of the message and translating it if necessary."""
+        # Detecting the language of the given message
+        detected_language = translate_client.detect_language(message.content)
+
+        # The message is only translated and sent if the detected language is not english, danish or an emoji.
+        if detected_language["language"] != "en" and detected_language["language"] != "da" \
+                and detected_language["language"] != "und":
+            await self.translate_message(message, translate_client)
+
+    @staticmethod
+    async def translate_message(message, translate_client):
+        """Translating the given message to english and sending a message containing the translation"""
+        translated_message = translate_client.translate(message.content, "en")["translatedText"]
+
+        # Using html.unescape to convert all character references in the message to corresponding unicode.
+        await message.channel.send(str(message.author) + " said:\n" + html.unescape(translated_message))
+
     # TODO: Make an analyse() function that can give information regarding a specific user
 
     # TODO: Make a translate function that can translate a non-english and non-danish message into english
@@ -281,6 +308,10 @@ class Hector(discord.Client):
 
 client = Hector()
 
-# Pulling the token from the config file and using it to run the bot.
+# Pulling the token from the config file and using it to set up the bot.
 with open("config.json", "r") as config:
-    client.run(json.load(config)["token"])
+    # Setting the environment variable for the GOOGLE_APPLICATION_CREDENTIALS. This needs to be done to connect
+    # hector with the google translate API.
+    config_dict = json.load(config)
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config_dict["google credential path"]
+    client.run(config_dict["token"])
