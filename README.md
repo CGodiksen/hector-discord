@@ -35,7 +35,7 @@ Adds a new birthday to the list of birthdays being kept in the system. An automa
 Adds an event to the system that contains the specified message. At 8.15 on the specified date the system will resend the message in the chat where the event was created, thereby working as an alert system. This can also be seen as the long term version of 
 <b>!remind_me</b>.
 
-<b>!lookup <em>term</em></b>
+<b>!lookup <em>term</em></b>  
 Looks up the given term in the "Artifical intelligence: Foundations of computational agents" index. If found, it returns a message with the link to the specific section containing information about the term. 
 
 <b>!commands</b>  
