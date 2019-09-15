@@ -54,17 +54,12 @@ class Hector(discord.Client):
         a command then that command is executed via another class method.
         """
 
-        # Creating a translation client for the google translate API
-        translate_client = translate.Client()
-
-        await self.detect_and_translate(message, translate_client)
-
-        # Obtaining some necessary information about the message
-        server = message.guild
-
         # Ignore if the message is from the bot itself.
         if message.author == self.user:
             return
+
+        # Detects the language and sends a message with a translation if the detected language is not english or danish.
+        await self.detect_and_translate(message)
 
         if message.content == "!hello":
             await self.hello(message)
@@ -87,7 +82,7 @@ class Hector(discord.Client):
         # Ensuring that these commands can only be called in a server text channel.
         if type(message.channel) is discord.TextChannel:
             if message.content == "!member_count":
-                await self.member_count(message, server)
+                await self.member_count(message)
 
             if message.content.startswith("!add_birthday ", 0, 14):
                 await self.add_birthday(message)
@@ -105,8 +100,11 @@ class Hector(discord.Client):
         await message.channel.send("Hi!")
 
     @staticmethod
-    async def member_count(message, server):
+    async def member_count(message):
         """Sends a message displaying the amount of members in a server."""
+        # Obtaining some necessary information about the message
+        server = message.guild
+
         await message.channel.send(server.name + " has " + str(len(server.members)) + " members")
 
     @staticmethod
@@ -283,14 +281,17 @@ class Hector(discord.Client):
         # section_site = requests.get(section_link)
         # section_parser = BeautifulSoup(section_site.text, "lxml")
 
-    async def detect_and_translate(self, message, translate_client):
+    async def detect_and_translate(self, message):
         """Detecting the language of the message and translating it if necessary."""
+        # Creating a translation client for the google translate API
+        translate_client = translate.Client()
+
         # Detecting the language of the given message
         detected_language = translate_client.detect_language(message.content)
 
         # The message is only translated and sent if the detected language is not english, danish or an emoji.
         if detected_language["language"] != "en" and detected_language["language"] != "da" \
-                and detected_language["language"] != "und":
+                and detected_language["language"] != "und" and detected_language["confidence"] == 1:
             await self.translate_message(message, translate_client)
 
     @staticmethod
