@@ -299,8 +299,10 @@ class Hector(discord.Client):
         """Translating the given message to english and sending a message containing the translation"""
         translated_message = translate_client.translate(message.content, "en")["translatedText"]
 
-        # Using html.unescape to convert all character references in the message to corresponding unicode.
-        await message.channel.send(str(message.author) + " said:\n" + html.unescape(translated_message))
+        # Only sending the message if the translated message is different from the original message.
+        if translated_message != message.content:
+            # Using html.unescape to convert all character references in the message to corresponding unicode.
+            await message.channel.send(str(message.author) + " said:\n" + html.unescape(translated_message))
 
     # TODO: Make an analyse() function that can give information regarding a specific user
 
