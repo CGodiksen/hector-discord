@@ -12,12 +12,17 @@ Secondly, you need to set up a ```config.json``` file in the main project direct
 {
   "token": YourTokenStringHere
   "owner id": YourIDIntHere
+  "google credential path": YourGoogleCredentialPathHere
 }
 ```
+The google credential path needs to be the filepath of the json file for your Google translate API key. This is used in the translation feature that hector offers. 
+
+For more information on how to set up af Google translate API project see: https://cloud.google.com/translate/docs/quickstart
+For more information on account keys in general see: https://cloud.google.com/iam/docs/creating-managing-service-account-keys
+
 When you have completed these two steps then Hector should be fully functional. 
 ## Usage
-The currently available commands for Hector are:  
-
+### Commands
 <b>!hello</b>  
 Says Hi!
 
@@ -40,6 +45,22 @@ Looks up the given term in the "Artifical intelligence: Foundations of computati
 
 <b>!commands</b>  
 Displays a list of the currently available commands for Hector. 
+
+### Passive functionality
+<b>Translation</b>  
+Every time a message is sent in a text channel that Hector has access to, he checks the language of the message. If the language is not danish or english, Hector translates the message and sends the translated message in the same text channel.
+
+Example:
+```
+Christian:
+Mein Name ist Christian
+
+Hector:
+Christian said:
+My name is Christian
+
+```
+The languages that hector should not translate can be changed in the "detect_and_translate" function.
 
 ## Current use
 
