@@ -15,7 +15,7 @@ Secondly, you need to set up a ```config.json``` file in the main project direct
   "google credential path": YourGoogleCredentialPathHere
 }
 ```
-The google credential path needs to be the filepath of the json file for your Google translate API key. This is used in the translation feature that hector offers. 
+The google credential path needs to be the filepath of the json file for your Google translate API key. This is used in the translation feature that Hector offers. 
 
 For more information on how to set up af Google translate API project see: https://cloud.google.com/translate/docs/quickstart
 For more information on account keys in general see: https://cloud.google.com/iam/docs/creating-managing-service-account-keys
@@ -60,7 +60,7 @@ Christian said:
 My name is Christian
 
 ```
-The languages that hector should not translate can be changed in the "detect_and_translate" function.
+The languages that Hector should not translate can be changed in the "detect_and_translate" function.
 
 ## Current use
 
