@@ -69,4 +69,4 @@ Hector is currently running on a Raspberry Pi 3b+ and is therefore not meant for
 is one discord server with 6 members and a private discord server with only me in it for testing purposes.
 
 ## Contributing
-This project is currently private and there is no plans on making outside contributions to the project available in the near future.
+This project is currently private and there are no plans to make outside contributions available in the near future.
