@@ -21,6 +21,13 @@ For more information on how to set up af Google translate API project see: https
 For more information on account keys in general see: https://cloud.google.com/iam/docs/creating-managing-service-account-keys
 
 When you have completed these two steps then Hector should be fully functional. 
+
+### Requirements
+A conventional requirements file is included which means that all dependencies can be installed by navigating to the project directory and typing the following in your terminal:
+```
+$ pip install -r requirements.txt
+```
+
 ## Usage
 ### Commands
 <b>!hello</b>  
