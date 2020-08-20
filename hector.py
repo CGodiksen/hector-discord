@@ -10,8 +10,6 @@ import dateutil.parser
 from datetime import date
 import datetime
 import json
-from bs4 import BeautifulSoup
-import requests
 from google.cloud import translate
 import os
 import html
@@ -46,7 +44,7 @@ class Hector(discord.Client):
                 await self.check_events()
                 await self.check_birthday()
 
-            await asyncio.sleep(60)
+            await asyncio.sleep(59)
 
     async def on_message(self, message):
         """
@@ -177,8 +175,7 @@ class Hector(discord.Client):
                                    "!member_count\n"
                                    "!remind_me ***message*** ***time***\n"
                                    "!add_event ***message*** ***date***\n"
-                                   "!add_birthday ***name*** ***date***\n"
-                                   "!lookup ***term***")
+                                   "!add_birthday ***name*** ***date***")
 
     @staticmethod
     async def add_event(message):
@@ -247,40 +244,6 @@ class Hector(discord.Client):
         except OSError:
             return
 
-    @staticmethod
-    async def lookup(message):
-        """Looks up a term in the MI book index and sends the section link that contains information about it."""
-        term = message.content[8:]
-
-        # The url containing the index for the book "Artificial intelligence: Foundations of computational agents".
-        url = "https://artint.info/2e/html/ArtInt2e.idx.html"
-        index_site = requests.get(url)
-
-        # Creating a html lxml parser with beautifulsoup4, this is used for pulling data out of the websites html.
-        index_parser = BeautifulSoup(index_site.text, "lxml")
-
-        # Creating an id that corresponds to the requested look up term, this id will be used to find the correct link.
-        lookup_id = term.replace(" ", "")
-
-        # If the given term does not exist, we want to catch the exception and give a relevant error message.
-        try:
-            # Finding the section href link that contains the target word using the lookup id.
-            section_link = index_parser.find("li", id=lookup_id).find("a", {"class": "ltx_ref"}).get("href")
-        except AttributeError:
-            await message.channel.send("I can't find any sections that contain information about \"" + term + "\"")
-            return
-
-        # The section_link needs to be appended to the rest of the url to create a visitable url.
-        section_link = "https://artint.info/2e/html/" + section_link
-
-        # Sending the link that corresponds to the target word.
-        await message.channel.send("You can find information on \"" + term + "\" at: \n" + section_link)
-
-        # TODO: Send a message containing the specific paragraph that contains the information needed.
-        # Grabbing the html from the section site and creating a bs4 parser for it, the same as above for the index.
-        # section_site = requests.get(section_link)
-        # section_parser = BeautifulSoup(section_site.text, "lxml")
-
     async def detect_and_translate(self, message):
         """Detecting the language of the message and translating it if necessary."""
         # Creating a translation client for the google translate API
@@ -303,10 +266,6 @@ class Hector(discord.Client):
         if translated_message != message.content:
             # Using html.unescape to convert all character references in the message to corresponding unicode.
             await message.channel.send(str(message.author) + " said:\n" + html.unescape(translated_message))
-
-    # TODO: Make an analyse() function that can give information regarding a specific user
-
-    # TODO: Make a translate function that can translate a non-english and non-danish message into english
 
 
 client = Hector()
