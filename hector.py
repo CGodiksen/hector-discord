@@ -132,26 +132,40 @@ class Hector(discord.Client):
             await message.channel.send("You need to specify a time")
 
     @staticmethod
-    async def add_birthday(message):
-        """Adds a new birthday to the list of birthdays for the given server."""
+    async def parse_message(message):
+        """
+        Parses a message with the format "!command content date" and extracts the content and date.
+
+        :param message: The message that is parsed.
+        :return: If the date can be parsed into a datetime object then the content and the date, if not then None.
+        """
         message_list = message.content.split()
 
         # Splitting the message into the different parts
-        birthday_name = " ".join(message_list[1:-1])
-        birthday_date = message_list[-1]
+        message_content = " ".join(message_list[1:-1])
+        message_date = message_list[-1]
 
         # Checking if the given date can be parsed into a datetime.datetime object
         try:
             dateutil.parser.parse(message_list[-1])
         except ValueError:
             await message.channel.send("This is not a supported date format")
-            return
+            return None, None
 
-        # Adding the birthday to the csv file of birthdays
-        with open("birthdays.csv", "a", newline="") as file:
-            birthday_writer = csv.writer(file)
-            birthday_writer.writerow([message.channel.id, birthday_name, birthday_date])
-            await message.add_reaction("\N{THUMBS UP SIGN}")
+        return message_content, message_date
+
+    async def add_birthday(self, message):
+        """Adds a new birthday to the list of birthdays for the given server."""
+        birthday_name, birthday_date = self.parse_message(message)
+
+        if birthday_name is not None:
+            # Adding the birthday to the csv file of birthdays
+            with open("birthdays.csv", "a", newline="") as file:
+                birthday_writer = csv.writer(file)
+                birthday_writer.writerow([message.channel.id, birthday_name, birthday_date])
+                await message.add_reaction("\N{THUMBS UP SIGN}")
+        else:
+            return
 
     @staticmethod
     async def check_birthday():
@@ -163,8 +177,8 @@ class Hector(discord.Client):
             birthdays = csv.reader(file)
             # Checking if it's a persons birthday by checking if the day and month are the same (ignoring year)
             for row in birthdays:
-                if dateutil.parser.parse(row[2]).date().day == date.today().day \
-                        and dateutil.parser.parse(row[2]).date().month == date.today().month:
+                birthday = dateutil.parser.parse(row[2]).date()
+                if birthday.day == date.today().day and birthday.month == date.today().month:
                     await client.get_channel(int(row[0])).send("Happy birthday " + row[1].title() + "!")
 
     @staticmethod
@@ -177,40 +191,31 @@ class Hector(discord.Client):
                                    "!add_event ***message*** ***date***\n"
                                    "!add_birthday ***name*** ***date***")
 
-    @staticmethod
-    async def add_event(message):
+    async def add_event(self, message):
         """Adds a new event to the list of active events for the specific server."""
-        message_list = message.content.split()
+        event_message, event_date = self.parse_message(message)
 
-        # Splitting the message into the different parts
-        event_message = " ".join(message_list[1:-1])
-        event_date = message_list[-1]
+        if event_message is not None:
+            # Ensuring that the entered date is in the future and not today or in the past.
+            if dateutil.parser.parse(event_date) <= datetime.datetime.now():
+                await message.channel.send("That is in the past, let's think about the future instead.")
+                return
 
-        # Checking if the given date can be parsed into a datetime.datetime object.
-        try:
-            dateutil.parser.parse(message_list[-1])
-        except ValueError:
-            await message.channel.send("This is not a supported date format")
-            return
+            # If it's a private chat we need to use the author id so we can send a private message.
+            # The problem with saving the dm_channel id is that dm channels are not kept in the cache for long.
+            if type(message.channel) is discord.TextChannel:
+                message_id = message.channel.id
+            else:
+                message_id = message.author.id
 
-        # Ensuring that the entered date is in the future and not today or in the past.
-        if dateutil.parser.parse(message_list[-1]) <= datetime.datetime.now():
-            await message.channel.send("That is in the past, let's think about the future instead.")
-            return
+            # Appending the file that contains the currently active events
+            with open("events.csv", "a", newline="") as file:
+                event_writer = csv.writer(file)
 
-        # If it's a private chat we need to use the author id so we can send a private message.
-        # The problem with saving the dm_channel id is that dm channels are not kept in the cache for long.
-        if type(message.channel) is discord.TextChannel:
-            message_id = message.channel.id
+                event_writer.writerow([message_id, event_message, event_date])
+                await message.add_reaction("\N{THUMBS UP SIGN}")
         else:
-            message_id = message.author.id
-
-        # Appending the file that contains the currently active events
-        with open("events.csv", "a", newline="") as file:
-            event_writer = csv.writer(file)
-
-            event_writer.writerow([message_id, event_message, event_date])
-            await message.add_reaction("\N{THUMBS UP SIGN}")
+            return
 
     @staticmethod
     async def check_events():
