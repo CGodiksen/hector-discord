@@ -3,6 +3,8 @@
 The discord bot is implemented using a class based design and the "discord.Client" superclass from the
 "discord" python package.
 """
+import pathlib
+
 import discord
 import asyncio
 import csv
@@ -25,6 +27,10 @@ class Hector(discord.Client):
         """Initializing the necessary elements from the super class and starting the looping background task."""
         super().__init__(**options)
 
+        # Creates the necessary storage setup if it does not already exist.
+        pathlib.Path("data").mkdir(parents=True, exist_ok=True)
+        pathlib.Path("resources").mkdir(parents=True, exist_ok=True)
+
         # Create the background task and run it in the background
         self.bg_task = self.loop.create_task(self.background_task())
 
@@ -44,7 +50,7 @@ class Hector(discord.Client):
                 await self.check_events()
                 await self.check_birthday()
 
-            await asyncio.sleep(59)
+            await asyncio.sleep(60)
 
     async def on_message(self, message):
         """
@@ -74,9 +80,6 @@ class Hector(discord.Client):
         if message.content.startswith("!add_event ", 0, 11):
             await self.add_event(message)
 
-        if message.content.startswith("!lookup ", 0, 8):
-            await self.lookup(message)
-
         # Ensuring that these commands can only be called in a server text channel.
         if type(message.channel) is discord.TextChannel:
             if message.content == "!member_count":
@@ -88,7 +91,7 @@ class Hector(discord.Client):
     async def get_out(self, message):
         """Shuts down the bot if the command was made by the owner of the bot."""
         # Pulling the owner ID from the config file and using it to check if the message is sent by the owner.
-        with open("config.json", "r") as config_file:
+        with open("resources/config.json", "r") as config_file:
             if message.author.id == json.load(config_file)["owner id"]:
                 await self.close()
 
@@ -96,6 +99,16 @@ class Hector(discord.Client):
     async def hello(message):
         """Sends a message saying "Hi!"."""
         await message.channel.send("Hi!")
+
+    @staticmethod
+    async def commands(message):
+        """Sends a list of the currently available commands for Hector."""
+        await message.channel.send("The currently available commands are:\n"
+                                   "!hello\n"
+                                   "!member_count\n"
+                                   "!remind_me ***message*** ***time***\n"
+                                   "!add_event ***message*** ***date***\n"
+                                   "!add_birthday ***name*** ***date***")
 
     @staticmethod
     async def member_count(message):
@@ -147,20 +160,20 @@ class Hector(discord.Client):
 
         # Checking if the given date can be parsed into a datetime.datetime object
         try:
-            dateutil.parser.parse(message_list[-1])
+            message_datetime = dateutil.parser.parse(message_date)
         except ValueError:
             await message.channel.send("This is not a supported date format")
             return None, None
 
-        return message_content, message_date
+        return message_content, message_datetime
 
     async def add_birthday(self, message):
         """Adds a new birthday to the list of birthdays for the given server."""
-        birthday_name, birthday_date = self.parse_message(message)
+        birthday_name, birthday_date = await self.parse_message(message)
 
         if birthday_name is not None:
             # Adding the birthday to the csv file of birthdays
-            with open("birthdays.csv", "a", newline="") as file:
+            with open("data/birthdays.csv", "a+", newline="") as file:
                 birthday_writer = csv.writer(file)
                 birthday_writer.writerow([message.channel.id, birthday_name, birthday_date])
                 await message.add_reaction("\N{THUMBS UP SIGN}")
@@ -173,31 +186,25 @@ class Hector(discord.Client):
         Sends a happy birthday message if it's someones birthday.
         The message is sent in the same channel the birthday was added in.
         """
-        with open("birthdays.csv", "r") as file:
-            birthdays = csv.reader(file)
-            # Checking if it's a persons birthday by checking if the day and month are the same (ignoring year)
-            for row in birthdays:
-                birthday = dateutil.parser.parse(row[2]).date()
-                if birthday.day == date.today().day and birthday.month == date.today().month:
-                    await client.get_channel(int(row[0])).send("Happy birthday " + row[1].title() + "!")
-
-    @staticmethod
-    async def commands(message):
-        """Sends a list of the currently available commands for Hector."""
-        await message.channel.send("The currently available commands are:\n"
-                                   "!hello\n"
-                                   "!member_count\n"
-                                   "!remind_me ***message*** ***time***\n"
-                                   "!add_event ***message*** ***date***\n"
-                                   "!add_birthday ***name*** ***date***")
+        # Trying to open the file for reading, if it doesnt exist it throws an OSError.
+        try:
+            with open("data/birthdays.csv", "r") as file:
+                birthdays = csv.reader(file)
+                # Checking if it's a persons birthday by checking if the day and month are the same (ignoring year)
+                for row in birthdays:
+                    birthday = dateutil.parser.parse(row[2]).date()
+                    if birthday.day == date.today().day and birthday.month == date.today().month:
+                        await client.get_channel(int(row[0])).send("Happy birthday " + row[1].title() + "!")
+        except OSError:
+            return
 
     async def add_event(self, message):
         """Adds a new event to the list of active events for the specific server."""
-        event_message, event_date = self.parse_message(message)
+        event_message, event_date = await self.parse_message(message)
 
         if event_message is not None:
             # Ensuring that the entered date is in the future and not today or in the past.
-            if dateutil.parser.parse(event_date) <= datetime.datetime.now():
+            if event_date <= datetime.datetime.now():
                 await message.channel.send("That is in the past, let's think about the future instead.")
                 return
 
@@ -209,7 +216,7 @@ class Hector(discord.Client):
                 message_id = message.author.id
 
             # Appending the file that contains the currently active events
-            with open("events.csv", "a", newline="") as file:
+            with open("data/events.csv", "a+", newline="") as file:
                 event_writer = csv.writer(file)
 
                 event_writer.writerow([message_id, event_message, event_date])
@@ -225,7 +232,7 @@ class Hector(discord.Client):
         """
         # Trying to open the file for reading, if it doesnt exist it throws an OSError.
         try:
-            with open("events.csv", "r") as file:
+            with open("data/events.csv", "r") as file:
                 active_events = []
 
                 # Goes through all the rows and checks if it scheduled for today, if so it sends the specified message
@@ -234,14 +241,14 @@ class Hector(discord.Client):
                     if dateutil.parser.parse(row[2]).date() == date.today():
                         # The id (row[0]) can either be a server channel id or a message author id from a dm channel.
                         if type(client.get_channel(int(row[0]))) is discord.TextChannel:
-                            await client.get_channel(int(row[0])).send(row[1])
+                            await client.get_channel(int(row[0])).send("Event: " + row[1])
                         else:
-                            await client.get_user(int(row[0])).send(row[1])
+                            await client.get_user(int(row[0])).send("Event: " + row[1])
                     else:
                         active_events.append(row)
 
             # Overwriting the file so it only contains the currently active events
-            with open("events.csv", "w", newline="") as file:
+            with open("data/events.csv", "w", newline="") as file:
                 event_writer = csv.writer(file)
 
                 for row in active_events:
@@ -276,7 +283,7 @@ class Hector(discord.Client):
 client = Hector()
 
 # Pulling the token from the config file and using it to set up the bot.
-with open("config.json", "r") as config:
+with open("resources/config.json", "r") as config:
     # Setting the environment variable for the GOOGLE_APPLICATION_CREDENTIALS. This needs to be done to connect
     # hector with the google translate API.
     config_dict = json.load(config)
