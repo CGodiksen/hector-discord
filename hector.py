@@ -4,17 +4,17 @@ The discord bot is implemented using a class based design and the "discord.Clien
 "discord" python package.
 """
 import pathlib
-
-import discord
 import asyncio
 import csv
-import dateutil.parser
-from datetime import date
 import datetime
 import json
-from google.cloud import translate
 import os
 import html
+import discord
+import dateutil.parser
+
+from datetime import date
+from google.cloud import translate
 
 
 class Hector(discord.Client):
@@ -106,7 +106,7 @@ class Hector(discord.Client):
         await message.channel.send("The currently available commands are:\n"
                                    "!hello\n"
                                    "!member_count\n"
-                                   "!remind_me ***message*** ***time***\n"
+                                   "!remind_me ***message*** ***time_in_minutes***\n"
                                    "!add_event ***message*** ***date***\n"
                                    "!add_birthday ***name*** ***date***")
 
