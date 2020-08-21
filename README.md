@@ -7,7 +7,7 @@ If you want to download and use Hector for yourself then some setup is required.
 
 First, you need to install all the required python packages that are used in the project, this can be done by navigating to where you normally install python packages and using the command ```$ pip install requirements.txt```. This will pull the required packages from the included requirements.txt file and install them.
 
-Secondly, you need to set up a ```config.json``` file in the main project directory. This file is needed to store your bots token and your own personal ID from discord. The token is used to run the bot and your ID is used to make it so only you can run the privileged command <b>!get_out</b>, that shuts down the bot. Just create a new file called ```config.json``` and make it contain the following:
+Secondly, you need to set up a ```config.json``` file in a folder called ```resources```. If the folder does not exist then just create one. This file is needed to store your bots token and your own personal ID from discord. The token is used to run the bot and your ID is used to make it so only you can run the privileged command <b>!get_out</b>, that shuts down the bot. Just create a new file called ```resources/config.json``` and make it contain the following:
 ```
 {
   "token": YourTokenStringHere
@@ -22,21 +22,18 @@ For more information on account keys in general see: https://cloud.google.com/ia
 
 When you have completed these two steps then Hector should be fully functional. 
 
-### Requirements
-A conventional requirements file is included which means that all dependencies can be installed by navigating to the project directory and typing the following in your terminal:
-```
-$ pip install -r requirements.txt
-```
-
 ## Usage
 ### Commands
+<b>!commands</b>  
+Displays a list of the currently available commands for Hector. 
+
 <b>!hello</b>  
 Says Hi!
 
 <b>!member_count</b>  
 Returns the amount of members in the server the message was sent from.
 
-<b>!remind_me <em>message time</em></b>  
+<b>!remind_me <em>message time_in_minutes</em></b>  
 Sends a private message to the person who sent the command, containing the specified message. The message is sent after a specified
 amount of time has passed (Max 24 hours in the future).
 
@@ -46,12 +43,6 @@ Adds a new birthday to the list of birthdays being kept in the system. An automa
 <b>!add_event <em>message date</em></b>  
 Adds an event to the system that contains the specified message. At 8.15 on the specified date the system will resend the message in the chat where the event was created, thereby working as an alert system. This can also be seen as the long term version of 
 <b>!remind_me</b>.
-
-<b>!lookup <em>term</em></b>  
-Looks up the given term in the "Artifical intelligence: Foundations of computational agents" index. If found, it returns a message with the link to the specific section containing information about the term. 
-
-<b>!commands</b>  
-Displays a list of the currently available commands for Hector. 
 
 ### Passive functionality
 <b>Translation</b>  
@@ -70,10 +61,5 @@ My name is Christian
 The languages that Hector should not translate can be changed in the "detect_and_translate" function.
 
 ## Current use
-
-
 Hector is currently running on a Raspberry Pi 3b+ and is therefore not meant for widespread use. The current scope of Hectors use
 is one discord server with 6 members and a private discord server with only me in it for testing purposes.
-
-## Contributing
-This project is currently private and there are no plans to make outside contributions available in the near future.
